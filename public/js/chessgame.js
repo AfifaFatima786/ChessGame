@@ -7,9 +7,13 @@ const boardElement=document.querySelector(".chessboard");
 let draggedPiece=null;
 let sourceSquare=null;
 let playerRole=null;
+let gameStarted = false;
+
 
 const renderBoard=()=>{
     const board=chess.board();
+
+    
     
 
     boardElement.innerHTML="";  /*phle se jo hai use delete krdo*/
@@ -34,11 +38,13 @@ const renderBoard=()=>{
     
 
      pieceElement.innerHTML=getPieceUnicode(square);
-     pieceElement.draggable=playerRole===square.color;
+     pieceElement.draggable=gameStarted && playerRole===square.color;
      /*square.color is the color of piece on it not the square ...now square.color is the color of piece on it while squareElement.color is the color of background div on which peice is placed. Also playerrole consist of the color which is working currently(w or b) */
 
       pieceElement.addEventListener("dragstart",(e)=>{
         /*Whenever the user starts dragging this element(pieceElement), run this function*/
+
+
         if(pieceElement.draggable){
             draggedPiece=pieceElement;
             sourceSquare={row:rowindex,col:squareindex};
@@ -49,10 +55,14 @@ const renderBoard=()=>{
       pieceElement.addEventListener("dragend",(e)=>{
         draggedPiece=null;
         sourceSquare=null;
+        
       })
 
       squareElement.appendChild(pieceElement);
+    
     }
+
+    
 
     squareElement.addEventListener("dragover",function(e){
         e.preventDefault();
@@ -83,33 +93,13 @@ const renderBoard=()=>{
 }
     }); 
     });
+
+
+
+
 };
 
 
-// const timer = (() => {
-//   let count = 10 * 60; // 10 minutes in seconds
-
-//   const interval = setInterval(() => {
-//     if (count <= 0) {
-//       clearInterval(interval);
-//       document.getElementById("timer").textContent = "Time's up!";
-//       return;
-//     }
-
-//     count--;
-
-//     const minutes = Math.floor(count / 60).toString().padStart(2, '0');
-//     const seconds = (count % 60).toString().padStart(2, '0');
-//     document.getElementById("timer").textContent = `${minutes}:${seconds}`;
-//   }, 1000); 
-// })();
-
-// socket.io("/profile",async function(req,res){
-
-//     const user = await userModel.findById(req.user);
-//     socket.emit("profile ckicked");
-   
-// })
 
 
 const handleMove=(sourceSquare,targetSource)=>{
@@ -164,10 +154,34 @@ socket.on("playerLeft",function(message){
             renderBoard();
 })
 
+socket.on("timerTick", function(data) {
+    const timerElement = document.getElementById("timer");
+    if (timerElement) {
+        const minutes = Math.floor(data.timeLeft / 60).toString().padStart(2, '0');
+        const seconds = (data.timeLeft % 60).toString().padStart(2, '0');
+        timerElement.textContent = `${minutes}:${seconds}`;
+    }
+});
+
+
 socket.on("move",function(move){
     chess.move(move);
     renderBoard();
 })
+
+
+socket.on("waitForPlayer", () => {
+    gameStarted = false;
+    const statusElement = document.getElementById("status");
+    if (statusElement) {
+        statusElement.textContent = "Waiting for another player to join...";
+    }
+});
+
+socket.on("gameStart", () => {
+    gameStarted = true;
+    renderBoard();
+});
 
 
 

@@ -44,6 +44,36 @@ const chess=new Chess();
 let players={};
 let currentPlayer="w";
 
+
+let moveTimer = null;
+const MOVE_TIME_LIMIT = 30 * 1000;
+
+
+
+function startMoveTimer() {
+    clearTimeout(moveTimer);
+    let timeLeft = MOVE_TIME_LIMIT / 1000;
+
+    io.emit("timerTick", { timeLeft });
+
+    moveTimer = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+            clearInterval(moveTimer);
+            const turn = chess.turn();
+            let loserRole = turn === 'w' ? 'white' : 'black';
+
+            io.emit("timeOut", loserRole);{
+            
+            chess.reset();}
+            io.emit("boardState", chess.fen());
+        } else {
+            io.emit("timerTick", { timeLeft });
+        }
+    }, 1000);
+
+}
+
 app.set("view engine","ejs");
 app.use(express.static(path.join(__dirname,"public")))
 
@@ -108,6 +138,7 @@ app.post("/login",async function(req,res){
     res.redirect("/home");
 
     }
+
     })
 });
 
@@ -127,17 +158,6 @@ app.get("/profile",isLoggedIn,async function(req,res){
     res.render("profile",{user});
 })
 
-// var timer=setInterval(() => {
-//     if(count===600000)            /*time up*/
-//     {
-//         io.emit("Time up")
-//         clearInterval(int);
-//     }
-
-//     count++;
-
-// }, 60000);
-
 
 
 
@@ -154,26 +174,20 @@ io.on("connection",function(uniquesocket){
     }else{
         uniquesocket.emit("spectatorRole")
     }
+    
 
     
     uniquesocket.emit("boardState", chess.fen())
-//     setInterval(() => {
-//     if(count===600000)           
-//     {
-//         io.emit("Time up")
-//         clearInterval(int);
-//     }
 
-//     count++;
+     if (players.white && players.black) {
+        io.emit("gameStart");
+        startMoveTimer();
+    } else {
+        io.emit("waitForPlayer");
+    }
+    
 
-// }, 60000);
-
-
-
-    // uniquesocket.on('profile clicked',isLoggedIn, () => {
-    // app.render('profile', { email: socket.email })
-    // });
-
+    // startMoveTimer();
 
     uniquesocket.on("disconnect",function(){
         if(uniquesocket.id===players.white ){
@@ -198,6 +212,8 @@ io.on("connection",function(uniquesocket){
                 /*since internally the turn has been updated by the chess.js so in currentplayer we simply store the next turn*/
                 io.emit("move",move);
                 io.emit("boardState",chess.fen())   /* FEN-tell us the current stage of board , its a long equation*/
+
+                startMoveTimer()
             }else{
                 console.log("Invalid move : ",move);
                 uniquesocket.emit("Invalid Move",move)
@@ -236,6 +252,8 @@ io.on("connection",function(uniquesocket){
             uniquesocket.emit("Invalid move",move)
         }
     })
+
+    
 })
 
 
