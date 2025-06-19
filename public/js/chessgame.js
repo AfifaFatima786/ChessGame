@@ -2,6 +2,8 @@ const socket = io();
 const chess=new Chess();
 const boardElement=document.querySelector(".chessboard");
 
+
+
 let draggedPiece=null;
 let sourceSquare=null;
 let playerRole=null;
@@ -68,9 +70,47 @@ const renderBoard=()=>{
     });
     boardElement.appendChild(squareElement);
 
+     const turn = chess.turn()
+    const statusElement = document.getElementById("status");
+    if (statusElement) {
+        if (playerRole === null) {
+        statusElement.textContent = "You are spectating.";
+    } else if (playerRole === turn) {
+        statusElement.textContent = "Your move.";
+    } else {
+        statusElement.textContent = "Waiting for opponent...";
+    }
+}
     }); 
     });
 };
+
+
+// const timer = (() => {
+//   let count = 10 * 60; // 10 minutes in seconds
+
+//   const interval = setInterval(() => {
+//     if (count <= 0) {
+//       clearInterval(interval);
+//       document.getElementById("timer").textContent = "Time's up!";
+//       return;
+//     }
+
+//     count--;
+
+//     const minutes = Math.floor(count / 60).toString().padStart(2, '0');
+//     const seconds = (count % 60).toString().padStart(2, '0');
+//     document.getElementById("timer").textContent = `${minutes}:${seconds}`;
+//   }, 1000); 
+// })();
+
+// socket.io("/profile",async function(req,res){
+
+//     const user = await userModel.findById(req.user);
+//     socket.emit("profile ckicked");
+   
+// })
+
 
 const handleMove=(sourceSquare,targetSource)=>{
     const move={
@@ -116,6 +156,12 @@ socket.on("spectatorRole",function(){
 socket.on("boardState",function(fen){
     chess.load(fen);
     renderBoard();
+})
+
+socket.on("playerLeft",function(message){
+            alert("Game Over: " + message);
+            chess.reset();
+            renderBoard();
 })
 
 socket.on("move",function(move){

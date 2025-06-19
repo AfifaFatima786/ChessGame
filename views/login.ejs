@@ -10,14 +10,46 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #aea0a0;
       color: #333;
+    }
+
+    /* Flash message styling */
+    #flashmessage {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+    }
+
+    .flash-success {
+      background-color: #4caf50; /* Green */
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .flash-error {
+      background-color: #f44336; /* Red */
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-align: center;
+    }
+
+    /* Centering container */
+    .center-wrapper {
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      padding:3;
+      margin-top: 5%;
     }
 
     .container {
       display: flex;
+      flex-wrap: wrap;
       gap: 60px;
       background-color: #aea0a0;
       padding: 40px;
@@ -87,57 +119,64 @@
   </style>
 </head>
 <body>
-  <div class="container">
-
-    <!-- Register Form -->
-    <div class="form-box">
-      <h2>Register</h2>
-      <form action="/register" method="POST">
-        <div class="form-group">
-          <label for="register-username">Username</label>
-          <input type="text" id="register-username" name="fullname" required />
-        </div>
-
-        <div class="form-group">
-          <label for="register-email">Email</label>
-          <input type="email" id="register-email" name="email" required />
-        </div>
-
-        <div class="form-group">
-          <label for="register-password">Password</label>
-          <input type="password" id="register-password" name="password" required />
-        </div>
-
-        <button type="submit">Register</button>
-
-        <% if (typeof registerError !== 'undefined') { %>
-          <div class="error"><%= registerError %></div>
-        <% } %>
-      </form>
-    </div>
-
-    <!-- Login Form -->
-    <div class="form-box">
-      <h2>Login</h2>
-      <form action="/login" method="POST">
-        <div class="form-group">
-          <label for="login-username"> Email</label>
-          <input type="email" id="login-username" name="email" required />
-        </div>
-
-        <div class="form-group">
-          <label for="login-password">Password</label>
-          <input type="password" id="login-password" name="password" required />
-        </div>
-
-        <button type="submit">Login</button>
-
-        <% if (typeof loginError !== 'undefined') { %>
-          <div class="error"><%= loginError %></div>
-        <% } %>
-      </form>
-    </div>
-
+  <!-- Flash Messages -->
+  <div id="flashmessage">
+    <% if (success.length > 0) { %>
+      <div class="flash-success"><%= success %></div>
+    <% } %>
+    <% if (error.length > 0) { %>
+      <div class="flash-error"><%= error %></div>
+    <% } %>
   </div>
+
+  <!-- Centered Form Section -->
+  <div class="center-wrapper">
+    <div class="container">
+      <!-- Register Form -->
+      <div class="form-box">
+        <h2>Register</h2>
+        <form action="/register" method="POST">
+          <div class="form-group">
+            <label for="register-username">Username</label>
+            <input type="text" id="register-username" name="fullname" required />
+          </div>
+          <div class="form-group">
+            <label for="register-email">Email</label>
+            <input type="email" id="register-email" name="email" required />
+          </div>
+          <div class="form-group">
+            <label for="register-password">Password</label>
+            <input type="password" id="register-password" name="password" required />
+          </div>
+          <button type="submit">Register</button>
+        </form>
+      </div>
+
+      <!-- Login Form -->
+      <div class="form-box">
+        <h2>Login</h2>
+        <form action="/login" method="POST">
+          <div class="form-group">
+            <label for="login-username">Email</label>
+            <input type="email" id="login-username" name="email" required />
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" name="password" required />
+          </div>
+          <button type="submit">Login</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    setTimeout(() => {
+      const flashMessage = document.getElementById('flashmessage');
+      if (flashMessage) {
+        flashMessage.style.display = 'none';
+      }
+    }, 2000);
+  </script>
 </body>
 </html>

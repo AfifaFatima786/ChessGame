@@ -8,6 +8,7 @@ const userModel=require("./models/usermodel")
 const jwt=require("jsonwebtoken")
 const bcrypt = require("bcrypt");
 
+
 const {generateToken}=require("./utils/generateToken")
 
 
@@ -20,6 +21,19 @@ app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
 
+const session = require("express-session");
+const flash = require("connect-flash");
+const isLoggedIn = require("./middlewares/isLoggedIn");
+
+// Setup session middleware
+app.use(session({
+    secret: process.env.EXPRESS_SESSION_SECRET || "secretKey",
+    resave: false,
+    saveUninitialized: false,
+}));
+
+// Setup flash middleware
+app.use(flash());
 
 
 const server=http.createServer(app);
@@ -35,7 +49,7 @@ app.use(express.static(path.join(__dirname,"public")))
 
 app.get("/",function(req,res){
     // res.render("index",{title:"Chess Game"});
-    res.render("login")
+    res.render("login",{success: req.flash("success"),error: req.flash("error"),title:"Chess Game"})
 })
 
 app.post("/register",async function(req,res){
@@ -44,7 +58,7 @@ app.post("/register",async function(req,res){
 
     let users=await userModel.findOne({email});
     if(users){
-     
+     req.flash("error", "User already exist");
      return res.redirect("/");
     } 
 
@@ -56,9 +70,10 @@ app.post("/register",async function(req,res){
         password:hash,
         fullname
     });
+        req.flash("success", "Registration successfull");
         let token=generateToken(user);
         res.cookie("token",token);
-        res.render("index",{title:"Chess Game"});
+        res.redirect("/home");
     }
     })
 }
@@ -74,39 +89,56 @@ app.post("/login",async function(req,res){
 
     const user=await userModel.findOne({email})
     if(!user) {
-    
+     req.flash("error", "Incorrect email or password");
      return res.redirect("/");
     }
     
     bcrypt.compare(password,user.password,function(err,result){
 
     if(!result)  
+
     {    
-    
+    req.flash("error", "Incorrect email or password");
     return res.redirect("/");
     }
     else{
+    req.flash("success", "You are logged in successfully");
     let token=generateToken(user);
     res.cookie("token",token);
-     res.render("index",{title:"Chess Game"});
+    res.redirect("/home");
 
     }
     })
 });
 
 
+app.get("/home",function(req,res){
+    res.render("index",{success: req.flash("success"),error: req.flash("error"),title:"Chess Game"});
+})
+
 app.get("/logout",async function(req,res){
     res.clearCookie("token");
     res.redirect("/")
 })
 
-app.get("/profile",async function(req,res){
+app.get("/profile",isLoggedIn,async function(req,res){
 
-    // let user=await userModel.
-
-    const user=await userModel.findOne({email});
+    const user = await userModel.findById(req.user);
     res.render("profile",{user});
 })
+
+// var timer=setInterval(() => {
+//     if(count===600000)            /*time up*/
+//     {
+//         io.emit("Time up")
+//         clearInterval(int);
+//     }
+
+//     count++;
+
+// }, 60000);
+
+
 
 
 io.on("connection",function(uniquesocket){
@@ -122,6 +154,25 @@ io.on("connection",function(uniquesocket){
     }else{
         uniquesocket.emit("spectatorRole")
     }
+
+    
+    uniquesocket.emit("boardState", chess.fen())
+//     setInterval(() => {
+//     if(count===600000)           
+//     {
+//         io.emit("Time up")
+//         clearInterval(int);
+//     }
+
+//     count++;
+
+// }, 60000);
+
+
+
+    // uniquesocket.on('profile clicked',isLoggedIn, () => {
+    // app.render('profile', { email: socket.email })
+    // });
 
 
     uniquesocket.on("disconnect",function(){
@@ -151,6 +202,32 @@ io.on("connection",function(uniquesocket){
                 console.log("Invalid move : ",move);
                 uniquesocket.emit("Invalid Move",move)
             }
+
+            uniquesocket.on("disconnect",function(){
+                let leftPlayer=null;
+                if(uniquesocket.id==players.white)
+                {
+                    leftPlayer="white";
+                    leftPlayer=uniquesocket.id;
+                    delete players.white;
+                }
+
+                else if(uniquesocket.id==players.black)
+                {
+                    leftPlayer="black";
+                    delete players.black;
+                }
+                if(leftPlayer){
+
+
+                    chess.reset();
+                    players={};
+                    currentPlayer="w";
+
+                io.emit("playerLeft", `${leftPlayer} player has left the game.`);
+                io.emit("boardState", chess.fen());
+                }
+            })
 
 
         }
