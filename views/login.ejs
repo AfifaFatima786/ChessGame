@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chess Login/Register</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #aea0a0;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      display: flex;
+      gap: 60px;
+      background-color: #aea0a0;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    .form-box {
+      width: 300px;
+      background-color: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .form-box h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #8d6e63;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #444;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #fff;
+      color: #333;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #8d6e63;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #6d4c41;
+    }
+
+    .error {
+      color: #c62828;
+      font-size: 14px;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Register Form -->
+    <div class="form-box">
+      <h2>Register</h2>
+      <form action="/register" method="POST">
+        <div class="form-group">
+          <label for="register-username">Username</label>
+          <input type="text" id="register-username" name="fullname" required />
+        </div>
+
+        <div class="form-group">
+          <label for="register-email">Email</label>
+          <input type="email" id="register-email" name="email" required />
+        </div>
+
+        <div class="form-group">
+          <label for="register-password">Password</label>
+          <input type="password" id="register-password" name="password" required />
+        </div>
+
+        <button type="submit">Register</button>
+
+        <% if (typeof registerError !== 'undefined') { %>
+          <div class="error"><%= registerError %></div>
+        <% } %>
+      </form>
+    </div>
+
+    <!-- Login Form -->
+    <div class="form-box">
+      <h2>Login</h2>
+      <form action="/login" method="POST">
+        <div class="form-group">
+          <label for="login-username"> Email</label>
+          <input type="email" id="login-username" name="email" required />
+        </div>
+
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" name="password" required />
+        </div>
+
+        <button type="submit">Login</button>
+
+        <% if (typeof loginError !== 'undefined') { %>
+          <div class="error"><%= loginError %></div>
+        <% } %>
+      </form>
+    </div>
+
+  </div>
+</body>
+</html>

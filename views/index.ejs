@@ -62,13 +62,23 @@
     </style>
     <title>Document</title>
 </head>
-<body>
+
     
+    
+<body class="bg-zinc-900 text-white min-h-screen flex flex-col">
 
+  <!-- Navbar -->
+  <header class="w-full px-8 py-4 flex justify-end">
+    <nav class="flex gap-6 text-lg">
+      <a href="/profile" class="hover:text-orange-400 transition">Profile</a>
+      <a href="/logout" class="hover:text-orange-400 transition">Logout</a>
+    </nav>
+  </header>
 
-    <div class="w-full h-screen bg-zinc-900 flex justify-center items-center">
-        <div class="chessboard w-96 h-96 bg-red-800"></div>
-    </div>
+  <!-- Main Content -->
+  <main class="flex-grow flex items-center justify-center">
+    <div class="chessboard"></div>
+  </main>
 
 
 
@@ -81,5 +91,3 @@
     <script src="/js/chessgame.js"></script>
 </body>
 </html>
-
-<!-- <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script> -->
