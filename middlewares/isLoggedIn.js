@@ -2,7 +2,7 @@ const jwt=require('jsonwebtoken')
 const userModel=require("../models/usermodel")
 
 async function isLoggedIn(req, res, next) {
-    if(!req.cookies.token){
+    if(!req?.cookies?.token){
         req.flash("error","you need to be logged in first");
         return res.redirect("/");
     }

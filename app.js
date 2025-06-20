@@ -7,7 +7,7 @@ const path=require("path")
 const userModel=require("./models/usermodel")
 const jwt=require("jsonwebtoken")
 const bcrypt = require("bcrypt");
-
+const cookie=require("cookie")
 
 const {generateToken}=require("./utils/generateToken")
 
@@ -82,6 +82,8 @@ app.get("/",function(req,res){
     res.render("login",{success: req.flash("success"),error: req.flash("error"),title:"Chess Game"})
 })
 
+
+
 app.post("/register",async function(req,res){
     try{
     let {email,password,fullname}=req.body;
@@ -143,8 +145,13 @@ app.post("/login",async function(req,res){
 });
 
 
-app.get("/home",function(req,res){
-    res.render("index",{success: req.flash("success"),error: req.flash("error"),title:"Chess Game"});
+app.get("/home",isLoggedIn,async function(req,res){
+
+    const user = await userModel.findById(req.user);
+
+    // console.log(user.fullname)
+    res.render("index",{success: req.flash("success"),
+    error: req.flash("error"),title:"Chess Game",username:user.fullname});
 })
 
 app.get("/logout",async function(req,res){
@@ -161,7 +168,7 @@ app.get("/profile",isLoggedIn,async function(req,res){
 
 
 
-io.on("connection",function(uniquesocket){
+io.on("connection",async function(uniquesocket){
     console.log("connected");
 
     if(!players.white){
@@ -174,7 +181,27 @@ io.on("connection",function(uniquesocket){
     }else{
         uniquesocket.emit("spectatorRole")
     }
+
     
+    
+        const rawCookie = uniquesocket.handshake?.headers?.cookie;
+        if (!rawCookie) throw new Error("No cookie found");
+
+        const parsed = cookie.parse(rawCookie);
+        const token = parsed.token;
+        if (!token) throw new Error("Token not found in cookie");
+
+        const decoded = jwt.verify(token, process.env.JWT_KEY);
+        const userId = decoded.id;
+
+        const user = await userModel.findById(userId);
+        if (!user) throw new Error("User not found");
+
+        // uniquesocket.emit("userDetails", { user });
+
+
+    
+
 
     
     uniquesocket.emit("boardState", chess.fen())
@@ -186,8 +213,30 @@ io.on("connection",function(uniquesocket){
         io.emit("waitForPlayer");
     }
     
+    
+    uniquesocket.data.username = user.fullname;
+    // console.log(uniquesocket.data.username)
 
-    // startMoveTimer();
+  uniquesocket.on("chatMessage", ({ message }) => {
+    const sender = uniquesocket.data.username;
+    // io.emit("chatMessage", { message, sender });
+
+     [players.white, players.black].forEach((id) => {
+    const playerSocket = io.sockets.sockets.get(id);
+    if (playerSocket) {
+      playerSocket.emit("chatMessage", { message, sender });
+    }
+  });
+  });
+   
+  
+  
+  
+ 
+
+
+
+
 
     uniquesocket.on("disconnect",function(){
         if(uniquesocket.id===players.white ){

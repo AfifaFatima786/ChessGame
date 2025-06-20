@@ -1,3 +1,4 @@
+const username = window.currentUsername || "Unknown";
 const socket = io();
 const chess=new Chess();
 const boardElement=document.querySelector(".chessboard");
@@ -182,6 +183,58 @@ socket.on("gameStart", () => {
     gameStarted = true;
     renderBoard();
 });
+
+
+//chat
+// DOM refs
+  const chatOverlay = document.getElementById("chat-overlay");
+  const chatPreview = document.getElementById("chat-preview");
+  const closeBtn = document.getElementById("close-chat");
+  const chatBox = document.getElementById("chat-box");
+  const chatForm = document.getElementById("chat-form");
+  const chatInput = document.getElementById("chat-input");
+
+  // Open full chat on preview click
+  chatPreview.addEventListener("click", () => {
+    chatOverlay.classList.add("active");
+    chatOverlay.classList.remove("hidden");
+  });
+
+  // Close full chat
+  closeBtn.addEventListener("click", () => {
+    chatOverlay.classList.remove("active");
+    chatOverlay.classList.add("hidden");
+  });
+
+  // Send message
+  chatForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const message = chatInput.value.trim();
+    if (message) {
+      socket.emit("chatMessage", { message });
+      chatInput.value = "";
+    }
+  });
+
+  // Receive message
+  socket.on("chatMessage", ({ message, sender }) => {
+
+    const isMe = sender === window.currentUsername;
+
+    const msgWrapper = document.createElement("div");
+    msgWrapper.className = `w-full flex ${isMe ? 'justify-end' : 'justify-start'} mb-2`;
+
+    const msg = document.createElement("div");
+    msg.className = `px-3 py-2 rounded-lg max-w-[70%] ${isMe ? 'bg-orange-500 text-white' : 'bg-zinc-600 text-white'}`;
+    msg.textContent = message;
+
+    msgWrapper.appendChild(msg);
+    chatBox.appendChild(msgWrapper);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+ 
+  });
+
 
 
 
