@@ -4,6 +4,12 @@ const chess=new Chess();
 const boardElement=document.querySelector(".chessboard");
 
 
+// document.addEventListener("DOMContentLoaded", () => {
+//   const moveList = document.getElementById("moveList");
+//   if (moveList) moveList.innerHTML = ""; // Clear on refresh
+// });
+
+
 
 let draggedPiece=null;
 let sourceSquare=null;
@@ -182,6 +188,15 @@ socket.on("waitForPlayer", () => {
 socket.on("gameStart", () => {
     gameStarted = true;
     renderBoard();
+
+    const moveList = document.getElementById("moveList");
+    if (moveList) moveList.innerHTML = "";
+});
+
+socket.on("move", (move) => {
+  const li = document.createElement("li");
+  li.innerText = move.san;
+  document.getElementById("moveList").appendChild(li);
 });
 
 
@@ -234,6 +249,9 @@ socket.on("gameStart", () => {
 
  
   });
+
+  
+
 
 
 

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+
+  <div class="w-full bg-gray-800 p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">Chess Dashboard</h1>
+    <nav class="space-x-6">
+      <a href="/home" class="hover:text-orange-400">Home</a>
+      <a href="/profile" class="hover:text-orange-400">Profile</a>
+      <a href="/dashboard" class="hover:text-orange-400 font-semibold">Dashboard</a>
+      <a href="/logout" class="hover:text-red-400">Logout</a>
+    </nav>
+  </div>
+
+  <div class="max-w-3xl mx-auto mt-10 p-6 bg-zinc-800 rounded-lg shadow-lg">
+    <h2 class="text-3xl font-bold mb-4">Welcome, <%= user.fullname %></h2>
+
+    <div class="grid grid-cols-2 gap-6 text-lg">
+      <div>
+        <p><span class="font-semibold">Email:</span> <%= user.email %></p>
+        <p><span class="font-semibold">Total Wins:</span> <%= user.wins || 0 %></p>
+        <p><span class="font-semibold">Total Losses:</span> <%= user.losses || 0 %></p>
+      </div>
+    </div>
+
+    <div class="mt-8">
+      <h3 class="text-2xl font-semibold mb-2">Move History</h3>
+      <% if (user.moveHistory && user.moveHistory.length > 0) { %>
+        <ul class=" moveList list-disc list-inside bg-gray-700 p-4 rounded-md">
+          <% user.moveHistory.forEach((move, index) => { %>
+            <li> <%= move %></li>
+          <% }) %>
+        </ul>
+      <% } else { %>
+        <p class="text-gray-400">No moves recorded yet.</p>
+      <% } %>
+    </div>
+  </div>
+
+</body>
+</html>

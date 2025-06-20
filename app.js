@@ -151,7 +151,7 @@ app.get("/home",isLoggedIn,async function(req,res){
 
     // console.log(user.fullname)
     res.render("index",{success: req.flash("success"),
-    error: req.flash("error"),title:"Chess Game",username:user.fullname});
+    error: req.flash("error"),title:"Chess Game",username:user.fullname,userStats: { wins: user.wins, losses: user.losses ,moveHistory: user.moveHistory || []}});
 })
 
 app.get("/logout",async function(req,res){
@@ -165,12 +165,25 @@ app.get("/profile",isLoggedIn,async function(req,res){
     res.render("profile",{user});
 })
 
+app.get("/dashboard", isLoggedIn, async function (req, res) {
+  const user = await userModel.findById(req.user);
+
+  console.log(user);
+  res.render("dashboard",  {user: {
+            fullname: user.fullname,
+            email: user.email,
+            wins: user.wins,
+            losses: user.losses,
+            moveHistory: user.moveHistory || [],
+        }});
+});
+
+
 
 
 
 io.on("connection",async function(uniquesocket){
-    console.log("connected");
-
+    
     if(!players.white){
         players.white=uniquesocket.id;
         uniquesocket.emit("playerRole","w")
@@ -197,25 +210,31 @@ io.on("connection",async function(uniquesocket){
         const user = await userModel.findById(userId);
         if (!user) throw new Error("User not found");
 
-        // uniquesocket.emit("userDetails", { user });
-
+    
+        uniquesocket.emit("boardState", chess.fen())
 
     
 
-
-    
-    uniquesocket.emit("boardState", chess.fen())
-
-     if (players.white && players.black) {
+       if (players.white && players.black) {
         io.emit("gameStart");
         startMoveTimer();
-    } else {
-        io.emit("waitForPlayer");
-    }
+
+    // Clear move history only when game starts (not on refresh or reconnect)
+    [players.white, players.black].forEach(async (id) => {
+        const socket = io.sockets.sockets.get(id);
+        if (!socket) return;
+
+        
+    });
+} else {
+    io.emit("waitForPlayer");
+}
+
+   
     
     
     uniquesocket.data.username = user.fullname;
-    // console.log(uniquesocket.data.username)
+    
 
   uniquesocket.on("chatMessage", ({ message }) => {
     const sender = uniquesocket.data.username;
@@ -229,26 +248,34 @@ io.on("connection",async function(uniquesocket){
   });
   });
    
-  
-  
-  
- 
 
-
-
-
-
-    uniquesocket.on("disconnect",function(){
+    uniquesocket.on("disconnect",async function(){
         if(uniquesocket.id===players.white ){
             delete players.white;
         }
         else if(uniquesocket.id===players.black ){
             delete players.black;
         }
+
+
+
+        try {
+            
+            const decoded = jwt.verify(token, process.env.JWT_KEY);
+            const user = await userModel.findById(decoded.id);
+
+            if (user) {
+                user.moveHistory = [];
+                await user.save();
+                socket.emit("moveHistory", []); // Clear it on frontend too
+            }
+        } catch (err) {
+            console.error("Error clearing move history at game start:", err.message);
+        }
     });
 
 
-    uniquesocket.on("move",(move)=>{
+    uniquesocket.on("move",async function(move){
         try{
             if(chess.turn()==='w' && uniquesocket.id!==players.white) return;
             /*players.white me id h us user ki jiska color white hai */
@@ -259,10 +286,31 @@ io.on("connection",async function(uniquesocket){
             if(result){
                 currentPlayer=chess.turn();    /*gives you the player who now has the turn, after the previous player made a valid move.*/         
                 /*since internally the turn has been updated by the chess.js so in currentplayer we simply store the next turn*/
-                io.emit("move",move);
+                io.emit("move",result);
                 io.emit("boardState",chess.fen())   /* FEN-tell us the current stage of board , its a long equation*/
 
                 startMoveTimer()
+
+                
+                const decoded = jwt.verify(token, process.env.JWT_KEY);
+
+
+                const user = await userModel.findById(decoded.id);
+                    if (user) {
+                        console.log("Saving move:", result.san); 
+                        user.moveHistory.push(result.san); // use move.san for standard notation
+                        await user.save();
+                    }
+                    
+                    if (winnerId === players.white) {
+                    await userModel.findByIdAndUpdate(whiteUserId, { $inc: { wins: 1 } });
+                    await userModel.findByIdAndUpdate(blackUserId, { $inc: { losses: 1 } });
+                    }         
+
+
+
+
+
             }else{
                 console.log("Invalid move : ",move);
                 uniquesocket.emit("Invalid Move",move)
@@ -295,6 +343,9 @@ io.on("connection",async function(uniquesocket){
             })
 
 
+            
+
+
         }
         catch(err){
             console.log(err);
@@ -309,5 +360,5 @@ io.on("connection",async function(uniquesocket){
 
 
 server.listen(3000,function(){
-    console.log("hey its working");
-});
+    console.log("hey its workingng");
+});   

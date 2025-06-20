@@ -93,15 +93,21 @@
 <% } %>
 </div>
 
+
+
+
   
   <!-- <div><%= username%></div> -->
   <!-- Navbar -->
   <header class="w-full px-8 py-4 flex justify-end">
     <nav class="flex gap-6 text-lg">
       <a href="/profile" class="hover:text-orange-400 transition">Profile</a>
+      <a href="/dashboard" class="hover:text-orange-400 transition">Dashboard</a>
       <a href="/logout" class="hover:text-orange-400 transition">Logout</a>
     </nav>
   </header>
+  <div id="flash-message" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded shadow-md hidden z-50"></div>
+
 
   <div class=" flex justify-between items-center mb-4 space-x-4">
   <div id="timer" class="bg-black text-white p-2 rounded shadow-md w-[10%] text-center">Time left:30sec</div>
